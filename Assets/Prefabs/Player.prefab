@@ -166,7 +166,7 @@ MonoBehaviour:
   jumpBufferTime: 0.1
   jumpThreshold: 3
   wallSlideModifier: 0.5
-  wallJumpXVelocityHaltDelay: 0.1
+  wallJumpXVelocityHaltDelay: 0.2
   stamina: 1
   dashSpeed: 20
   dashLength: 0.3
