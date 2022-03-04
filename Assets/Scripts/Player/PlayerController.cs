@@ -9,7 +9,10 @@ public class PlayerController : MonoBehaviour
     private PlayerInput input;
 
     private Health health;
-    private int gold;
+
+    [Header("Shop")]
+    private int gold = 0;
+    public Shop currentShop;
 
     [Header("Movement")]
     [SerializeField] private float acceleration;
@@ -19,8 +22,10 @@ public class PlayerController : MonoBehaviour
     private float moveX;
     private float moveY;
     private bool changeDir => (rb.velocity.x > 0f && moveX < 0f) || (rb.velocity.x < 0f && moveX > 0f);
-    private bool canMove => !wallGrab;
+    private bool canMove => !wallGrab && !interacting;
     private bool facingRight = true;
+    private bool interacting = false;
+    private bool canInteract = false;
 
 
     [Header("Jumping")]
@@ -31,7 +36,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float hangTime;
     [SerializeField] private float jumpBufferTime;
     [SerializeField] private float jumpThreshold;
-    private bool canJump => jumpBufferCounter > 0f && (hangTimeCounter > 0f || extraJumpsValue > 0f || (onWall && wallJumpUnlocked));
+    private bool canJump => jumpBufferCounter > 0f && (hangTimeCounter > 0f || extraJumpsValue > 0f || (onWall && wallJumpUnlocked)) && canMove;
     private bool isJumping;
     private short extraJumpsValue;
     private float hangTimeCounter;
@@ -101,6 +106,18 @@ public class PlayerController : MonoBehaviour
         else if (moveInput.y < -0.5) moveY = -1;
         else moveY = 0;
 
+        if (moveY == 1 && canInteract && !interacting && currentShop != null)
+        {
+            interacting = true;
+            currentShop.Show();
+        }
+
+        if (input.actions["Cancel"].WasPressedThisFrame() && interacting)
+        {
+            interacting = false;
+            currentShop.Hide();
+        }
+
         if (input.actions["Jump"].WasPressedThisFrame()) jumpBufferCounter = jumpBufferTime;
         else jumpBufferCounter -= Time.deltaTime;
 
@@ -115,7 +132,7 @@ public class PlayerController : MonoBehaviour
         if (isDashing)
         {
 
-        } else
+        } else if (canMove)
         {
             if ((moveX < 0f && facingRight || moveX > 0f && !facingRight) && !wallGrab && !wallSlide)
             {
@@ -162,7 +179,8 @@ public class PlayerController : MonoBehaviour
         if (!isDashing)
         {
             if (canMove) Move();
-            else rb.velocity = Vector2.Lerp(rb.velocity, (new Vector2(moveX * maxMoveSpeed, rb.velocity.y)), .5f * Time.fixedDeltaTime);
+            /*            else rb.velocity = Vector2.Lerp(rb.velocity, (new Vector2(moveX * maxMoveSpeed, rb.velocity.y)), .5f * Time.fixedDeltaTime);*/
+            else rb.velocity = Vector3.zero;
             if (onGround)
             {
                 ApplyGroundLinearDrag();
@@ -247,7 +265,7 @@ public class PlayerController : MonoBehaviour
         Vector2 jumpDirection = onRightWall ? Vector2.left : Vector2.right;
         Jump(Vector2.up + jumpDirection);
         yield return new WaitForSeconds(wallJumpXVelocityHaltDelay);
-        rb.velocity = new Vector2(Mathf.Abs(rb.velocity.x) * jumpDirection.x, rb.velocity.y);
+        rb.velocity = new Vector2(0f, rb.velocity.y);
     }
 
     private void Move()
@@ -420,6 +438,11 @@ public class PlayerController : MonoBehaviour
                 wallGrabUnlocked = true;
                 break;
         }
+    }
+
+    public void SetCanInteract(bool value)
+    {
+        canInteract = value;
     }
 
     private void OnDrawGizmos()

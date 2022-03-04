@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class Shop : MonoBehaviour
 {
@@ -11,6 +12,8 @@ public class Shop : MonoBehaviour
 
     [SerializeField] private float shopItemHeight = 30f;
     [SerializeField] private PlayerController player;
+
+    private GameObject firstSelected = null;
 
     private void Awake()
     {
@@ -38,11 +41,15 @@ public class Shop : MonoBehaviour
         shopItemTransform.Find("itemCost").GetComponent<Text>().text = itemCost + "";
 
         shopItemTransform.Find("Panel").GetComponent<Button>().onClick.AddListener(delegate { BuyItem(type); });
+
+        if (firstSelected == null)
+            firstSelected = shopItemTransform.Find("Panel").gameObject;
     }
 
     public void Show()
     {
         gameObject.SetActive(true);
+        EventSystem.current.SetSelectedGameObject(firstSelected);
     }
 
     public void Hide()
