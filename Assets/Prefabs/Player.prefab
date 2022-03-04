@@ -154,6 +154,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff2ed67cb36700b4d817a5033d17c288, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentShop: {fileID: 0}
   acceleration: 50
   maxMoveSpeed: 12
   groundLinearDrag: 20

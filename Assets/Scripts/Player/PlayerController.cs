@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     [Header("Shop")]
     private int gold = 0;
     public Shop currentShop;
+    [SerializeField] private GameObject interactText;
 
     [Header("Movement")]
     [SerializeField] private float acceleration;
@@ -116,6 +117,14 @@ public class PlayerController : MonoBehaviour
         {
             interacting = false;
             currentShop.Hide();
+        }
+
+        if (canInteract && !interacting)
+        {
+            interactText.SetActive(true);
+        } else
+        {
+            interactText.SetActive(false);
         }
 
         if (input.actions["Jump"].WasPressedThisFrame()) jumpBufferCounter = jumpBufferTime;
