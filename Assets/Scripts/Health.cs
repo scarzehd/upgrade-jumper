@@ -5,8 +5,14 @@ using UnityEngine.Events;
 
 public class Health : MonoBehaviour
 {
-    public int health;
-    public int maxHealth;
+    public int health
+    {
+        get; private set;
+    }
+    public int maxHealth
+    {
+        get; private set;
+    }
 
     public UnityAction onDeath;
 

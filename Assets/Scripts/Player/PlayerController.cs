@@ -6,12 +6,19 @@ public class PlayerController : MonoBehaviour
 {
     private Rigidbody2D rb;
     private Animator anim;
-    private PlayerInput input;
+    public PlayerInput input
+    {
+        get; private set;
+    }
 
-    private Health health;
+    public Health health;
+
+    public int gold
+    {
+        get; private set;
+    } = 0;
 
     [Header("Shop")]
-    private int gold = 0;
     public Shop currentShop;
     [SerializeField] private GameObject interactText;
 
@@ -20,10 +27,16 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float maxMoveSpeed;
     [SerializeField] private float groundLinearDrag;
     [SerializeField] private float airLinearDrag;
-    private float moveX;
-    private float moveY;
+    public float moveX
+    {
+        get; private set;
+    }
+    public float moveY
+    {
+        get; private set;
+    }
     private bool changeDir => (rb.velocity.x > 0f && moveX < 0f) || (rb.velocity.x < 0f && moveX > 0f);
-    private bool canMove => !wallGrab && !interacting;
+    private bool canMove => !wallGrab && !interacting && !PauseManager.paused;
     private bool facingRight = true;
     private bool interacting = false;
     private bool canInteract = false;
@@ -33,21 +46,37 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float jumpForce;
     [SerializeField] private float fallMultiplier;
     [SerializeField] private float lowJumpMultiplier;
-    [SerializeField] private short extraJumps;
+    public int extraJumps
+    {
+        get; private set;
+    }
     [SerializeField] private float hangTime;
     [SerializeField] private float jumpBufferTime;
     [SerializeField] private float jumpThreshold;
     private bool canJump => jumpBufferCounter > 0f && (hangTimeCounter > 0f || extraJumpsValue > 0f || (onWall && wallJumpUnlocked)) && canMove;
-    private bool isJumping;
-    private short extraJumpsValue;
+    public bool isJumping
+    {
+        get; private set;
+    }
+
+    public int extraJumpsValue
+    {
+        get; private set;
+    }
     private float hangTimeCounter;
     private float jumpBufferCounter;
 
     [Header("Wall Movement")]
     [SerializeField] private float wallSlideModifier;
     [SerializeField] private float wallJumpXVelocityHaltDelay;
-    [SerializeField] private float stamina;
-    private float staminaValue;
+    public float maxStamina
+    {
+        get; private set;
+    }
+    public float staminaValue
+    {
+        get; private set;
+    }
     private bool wallGrab => onWall && !onGround && input.actions["WallGrab"].IsPressed() && wallGrabUnlocked && staminaValue > 0;
     private bool wallSlide => onWall && !onGround && !input.actions["WallGrab"].IsPressed() && rb.velocity.y < 0f;
 
@@ -58,8 +87,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float dashBufferTime;
     private float dashBufferCounter;
     private bool isDashing = false;
-    private bool hasDashed;
-    private bool canDash => dashBufferCounter > 0f && !hasDashed && dashUnlocked;
+    public bool hasDashed
+    {
+        get; private set;
+    }
+    private bool canDash => dashBufferCounter > 0f && !hasDashed && dashUnlocked && canMove;
 
     [Header("Ground Collision")]
     [SerializeField] private float checkDistance;
@@ -98,6 +130,11 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (input.actions["Pause"].WasPressedThisFrame())
+        {
+            PauseManager.Pause();
+        }
+
         Vector2 moveInput = input.actions["Move"].ReadValue<Vector2>();
         if (moveInput.x > 0.5) moveX = 1;
         else if (moveInput.x < -0.5) moveX = -1;
@@ -113,16 +150,24 @@ public class PlayerController : MonoBehaviour
             currentShop.Show();
         }
 
-        if (input.actions["Cancel"].WasPressedThisFrame() && interacting)
+        if (input.actions["Cancel"].WasPressedThisFrame())
         {
-            interacting = false;
-            currentShop.Hide();
+            if (interacting)
+            {
+                interacting = false;
+                currentShop.Hide();
+            }
+            if (PauseManager.paused)
+            {
+                PauseManager.Pause();
+            }
         }
 
         if (canInteract && !interacting)
         {
             interactText.SetActive(true);
-        } else
+        }
+        else
         {
             interactText.SetActive(false);
         }
@@ -229,7 +274,7 @@ public class PlayerController : MonoBehaviour
                 if (wallGrab) WallGrab();
                 if (onWall) StickToWall();
             }
-        }   
+        }
     }
 
     public void RefreshJumps()
@@ -245,7 +290,7 @@ public class PlayerController : MonoBehaviour
 
     public void RefreshStamina()
     {
-        staminaValue = stamina;
+        staminaValue = maxStamina;
     }
 
     private void Jump(Vector2 direction)
@@ -304,7 +349,7 @@ public class PlayerController : MonoBehaviour
 
     private void CheckCollisions()
     {
-        onGround = Physics2D.BoxCast(feet.position, new Vector2(groundCheckWidth, checkDistance), 0, Vector2.down, 0f, groundLayer);
+        onGround = Physics2D.BoxCast(feet.position, new Vector2(groundCheckWidth, checkDistance), 0, Vector2.down, 0f, groundLayer) && rb.velocity.y <= 0.1;
 
         onWall = Physics2D.Raycast(transform.position, Vector2.right, wallCheckDistance, wallLayer) ||
                  Physics2D.Raycast(transform.position, Vector2.left, wallCheckDistance, wallLayer);
@@ -378,41 +423,6 @@ public class PlayerController : MonoBehaviour
             yield return null;
         }
         isDashing = false;
-    }
-
-    public int GetGold()
-    {
-        return gold;
-    }
-
-    public int GetHealth()
-    {
-        return health.health;
-    }
-
-    public int GetMaxHealth()
-    {
-        return health.maxHealth;
-    }
-
-    public int GetExtraJumps()
-    {
-        return extraJumps;
-    }
-
-    public int GetExtraJumpsValue()
-    {
-        return extraJumpsValue;
-    }
-
-    public float GetMaxStamina()
-    {
-        return stamina;
-    }
-
-    public float GetStaminaValue()
-    {
-        return staminaValue;
     }
 
     public void AddGold(int amount)

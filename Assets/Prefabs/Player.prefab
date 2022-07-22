@@ -154,26 +154,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff2ed67cb36700b4d817a5033d17c288, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  health: {fileID: 0}
   currentShop: {fileID: 0}
+  interactText: {fileID: 0}
   acceleration: 50
   maxMoveSpeed: 12
-  groundLinearDrag: 20
+  groundLinearDrag: 40
   airLinearDrag: 2
-  jumpForce: 15
+  jumpForce: 20
   fallMultiplier: 7
   lowJumpMultiplier: 5
-  extraJumps: 0
   hangTime: 0.1
   jumpBufferTime: 0.1
   jumpThreshold: 3
   wallSlideModifier: 0.5
   wallJumpXVelocityHaltDelay: 0.1
-  stamina: 1
   dashSpeed: 20
   dashLength: 0.3
   dashBufferTime: 0.1
   checkDistance: 0.05
-  groundCheckWidth: 0.3
+  groundCheckWidth: 0.25
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -226,8 +226,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb272e59863b3cc4da2f29014c121ee7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  health: 3
-  maxHealth: 3
 --- !u!95 &7830869197430191114
 Animator:
   serializedVersion: 3
